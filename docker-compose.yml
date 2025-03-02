@@ -1,21 +1,10 @@
+version: '3.8'
+
 services:
   mqtt:
     image: eclipse-mosquitto
     ports:
       - "1883:1883"
-  
-  kafka:
-    image: wurstmeister/kafka
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-    ports:
-      - "9092:9092"
-  
-  zookeeper:
-    image: wurstmeister/zookeeper
-    ports:
-      - "2181:2181"
   
   postgres:
     image: postgres
@@ -26,13 +15,20 @@ services:
     ports:
       - "5432:5432"
   
-  processor:
-    build: ./processor
+  sensor_emulator:
+    build: ./sensor_emulator
     depends_on:
-      - kafka
+      - mqtt
+
+  data_processor:
+    build: ./data_processor
+    depends_on:
+      - mqtt
   
   ui:
     build: ./ui
     ports:
       - "5000:5000"
+    depends_on:
+      - postgres
 
