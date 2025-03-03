@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 import psycopg2
 import time
+from datetime import datetime
 
 # Настройки MQTT
 BROKER = "mqtt"
@@ -22,12 +23,27 @@ def connect_to_db():
             print(f"Error connecting to database: {e}. Retrying in 5 seconds...")
             time.sleep(5)  # Ждем 5 секунд перед повторной попыткой
 
+# Функция для преобразования строки в формат UNIX timestamp
+def convert_to_unix_timestamp(timestamp_str):
+    try:
+        # Преобразуем строку в формат datetime, если она в строковом формате
+        timestamp = datetime.strptime(timestamp_str, "%a, %d %b %Y %H:%M:%S GMT")
+        # Возвращаем число секунд с эпохи
+        return int(timestamp.timestamp())
+    except Exception as e:
+        print(f"Error converting timestamp: {e}")
+        return None
+
 # Функция, которая будет вызываться при получении сообщения
 def on_message(client, userdata, msg):
     try:
         # Получаем данные и выводим их
         data = json.loads(msg.payload.decode("utf-8"))
         print(f"Received data: {data}")
+
+        # Если временная метка приходит в строковом формате, преобразуем ее
+        if isinstance(data["timestamp"], str):
+            data["timestamp"] = convert_to_unix_timestamp(data["timestamp"])
 
         # Подключение к базе данных
         conn = connect_to_db()
@@ -76,4 +92,6 @@ client.subscribe(TOPIC)
 # Запуск обработки сообщений
 print("Waiting for messages...")
 client.loop_forever()
+
+
 
