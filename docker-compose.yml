@@ -28,6 +28,8 @@ services:
     build: ./data_processor
     depends_on:
       - mqtt
+      - postgres
+
   
   ui:
     build: ./ui
